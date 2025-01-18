@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
 
-const CreateBattle = () => {
+const CreateBattle = ({ onBack }) => {
   const [formData, setFormData] = useState({
     token1: '',
     token2: '',
@@ -25,12 +24,12 @@ const CreateBattle = () => {
       {/* Header */}
       <div className="container mx-auto px-4 py-6">
         <div className="flex justify-between items-center">
-          <Link 
-            to="/enter" 
+          <button 
+            onClick={onBack}
             className="text-gray-400 hover:text-primary transition-colors"
           >
             ← Back to Battles
-          </Link>
+          </button>
         </div>
       </div>
 
