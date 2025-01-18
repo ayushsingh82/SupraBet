@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 const Home = () => {
   return (
@@ -16,10 +17,13 @@ const Home = () => {
             Enter the arena. Battle. Win.
           </p>
           <div className="flex justify-center gap-6 animate-slide-up" style={{animationDelay: '0.4s'}}>
-            <button className="group bg-primary text-white px-8 py-3 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(255,51,102,0.5)]">
+            <Link 
+              to="/enter"
+              className="group bg-primary text-white px-8 py-3 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(255,51,102,0.5)]"
+            >
               Enter Arena
               <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">→</span>
-            </button>
+            </Link>
             <button className="border border-primary text-white px-8 py-3 rounded-lg transition-all duration-300 hover:bg-primary/10 hover:scale-105">
               Learn More
             </button>
