@@ -5,12 +5,29 @@ import CreateBattle from './components/CreateBattle'
 
 function App() {
   const [currentView, setCurrentView] = useState('home')
+  
+  console.log('Current View:', currentView) // Debug log
+
+  const renderView = () => {
+    console.log('Rendering view:', currentView) // Debug log
+    switch(currentView) {
+      case 'home':
+        return <Home onEnterArena={() => {
+          console.log('Enter Arena clicked') // Debug log
+          setCurrentView('enter')
+        }} />
+      case 'enter':
+        return <Enter onBack={() => setCurrentView('home')} onCreateBattle={() => setCurrentView('create')} />
+      case 'create':
+        return <CreateBattle onBack={() => setCurrentView('enter')} />
+      default:
+        return <Home onEnterArena={() => setCurrentView('enter')} />
+    }
+  }
 
   return (
     <div>
-      {currentView === 'home' && <Home onEnterArena={() => setCurrentView('enter')} />}
-      {currentView === 'enter' && <Enter onBack={() => setCurrentView('home')} onCreateBattle={() => setCurrentView('create')} />}
-      {currentView === 'create' && <CreateBattle onBack={() => setCurrentView('enter')} />}
+      {renderView()}
     </div>
   )
 }

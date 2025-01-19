@@ -1,6 +1,40 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import PriceChart from './PriceChart'
 
 const Enter = ({ onBack, onCreateBattle }) => {
+  console.log('Enter component rendered') // Debug log
+
+  const [priceData, setPriceData] = useState({
+    ETH: [],
+    BTC: []
+  })
+
+  useEffect(() => {
+    // Simulated price data - replace with actual Supra API call
+    const fetchPriceData = async () => {
+      try {
+        // Example data structure - replace with actual API response
+        const mockData = {
+          ETH: Array.from({ length: 24 }, (_, i) => ({
+            timestamp: Date.now() - i * 3600000,
+            price: 2000 + Math.random() * 200
+          })).reverse(),
+          BTC: Array.from({ length: 24 }, (_, i) => ({
+            timestamp: Date.now() - i * 3600000,
+            price: 40000 + Math.random() * 2000
+          })).reverse()
+        }
+        setPriceData(mockData)
+      } catch (error) {
+        console.error('Error fetching price data:', error)
+      }
+    }
+
+    fetchPriceData()
+    const interval = setInterval(fetchPriceData, 60000) // Update every minute
+    return () => clearInterval(interval)
+  }, [])
+
   const ongoingBattles = [
     {
       id: 1,
@@ -8,21 +42,15 @@ const Enter = ({ onBack, onCreateBattle }) => {
         symbol: "ETH",
         amount: "10.5",
         usdValue: "23,450",
-        score: "2,450"
       },
       token2: {
         symbol: "BTC",
         amount: "0.85",
         usdValue: "25,500",
-        score: "2,120"
       },
       totalPlayers: 156,
       timeLeft: "23:45:30",
-      status: "LIVE",
-      messages: [
-        "🚀 ETH scored 2,450 points with 23:45:30 left! Go try on BTC 🎯",
-        "💫 BTC scored 2,120 points with 23:45:30 left! Go try on ETH ⚡"
-      ]
+      status: "LIVE"
     },
     {
       id: 2,
@@ -30,21 +58,15 @@ const Enter = ({ onBack, onCreateBattle }) => {
         symbol: "SUPRA",
         amount: "50000",
         usdValue: "15,000",
-        score: "3,200"
       },
       token2: {
         symbol: "USDT",
         amount: "15000",
         usdValue: "15,000",
-        score: "2,800"
       },
       totalPlayers: 89,
       timeLeft: "22:15:45",
-      status: "LIVE",
-      messages: [
-        "🌟 SUPRA scored 3,200 points with 22:15:45 left! Go try on USDT 🎮",
-        "✨ USDT scored 2,800 points with 22:15:45 left! Go try on SUPRA 🎯"
-      ]
+      status: "LIVE"
     }
   ]
 
@@ -102,6 +124,11 @@ const Enter = ({ onBack, onCreateBattle }) => {
                   </div>
                   <p className="text-white font-semibold mb-1">{battle.token1.amount} {battle.token1.symbol}</p>
                   <p className="text-gray-400 text-sm">${battle.token1.usdValue}</p>
+                  {priceData[battle.token1.symbol] && priceData[battle.token1.symbol].length > 0 && (
+                    <div className="mt-2">
+                      <PriceChart data={priceData[battle.token1.symbol]} symbol={battle.token1.symbol} />
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-col items-center px-4">
                   <div className="text-primary text-3xl font-bold mb-2">VS</div>
@@ -116,20 +143,12 @@ const Enter = ({ onBack, onCreateBattle }) => {
                   </div>
                   <p className="text-white font-semibold mb-1">{battle.token2.amount} {battle.token2.symbol}</p>
                   <p className="text-gray-400 text-sm">${battle.token2.usdValue}</p>
+                  {priceData[battle.token2.symbol] && priceData[battle.token2.symbol].length > 0 && (
+                    <div className="mt-2">
+                      <PriceChart data={priceData[battle.token2.symbol]} symbol={battle.token2.symbol} />
+                    </div>
+                  )}
                 </div>
-              </div>
-
-              {/* Battle Messages */}
-              <div className="bg-background/30 rounded-xl p-4 mb-6 space-y-3">
-                {battle.messages.map((message, index) => (
-                  <div 
-                    key={index}
-                    className="text-sm text-gray-300 animate-slide-up"
-                    style={{ animationDelay: `${index * 0.2}s` }}
-                  >
-                    {message}
-                  </div>
-                ))}
               </div>
 
               {/* Battle Info */}
