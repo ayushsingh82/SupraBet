@@ -1,32 +1,92 @@
 import React, { useState, useEffect } from 'react'
 import PriceChart from './PriceChart'
+import WalletConnect from './WalletConnect'
+
+const SUPRA_API_KEY = 'YOUR_SUPRA_API_KEY'
+const SUPRA_API_ENDPOINT = 'https://api.supraoracles.com/oracle/v1'
+
+const generateRealisticPriceData = (basePrice, volatility, hoursOfData = 24) => {
+  const now = Date.now()
+  let currentPrice = basePrice
+  
+  return Array.from({ length: hoursOfData }, (_, i) => {
+    // More realistic price movement using small random changes
+    const changePercent = (Math.random() - 0.5) * volatility
+    currentPrice = currentPrice * (1 + changePercent)
+    
+    return {
+      timestamp: now - (hoursOfData - 1 - i) * 3600000, // Start from 24 hours ago
+      price: currentPrice
+    }
+  })
+}
 
 const Enter = ({ onBack, onCreateBattle }) => {
   console.log('Enter component rendered') // Debug log
 
   const [priceData, setPriceData] = useState({
     ETH: [],
-    BTC: []
+    BTC: [],
+    SUPRA: [],
+    USDT: []
   })
 
   useEffect(() => {
-    // Simulated price data - replace with actual Supra API call
     const fetchPriceData = async () => {
       try {
-        // Example data structure - replace with actual API response
-        const mockData = {
-          ETH: Array.from({ length: 24 }, (_, i) => ({
-            timestamp: Date.now() - i * 3600000,
-            price: 2000 + Math.random() * 200
-          })).reverse(),
-          BTC: Array.from({ length: 24 }, (_, i) => ({
-            timestamp: Date.now() - i * 3600000,
-            price: 40000 + Math.random() * 2000
-          })).reverse()
+        // Fetch price data for all token pairs
+        const response = await fetch(`${SUPRA_API_ENDPOINT}/prices`, {
+          headers: {
+            'Authorization': `Bearer ${SUPRA_API_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch price data')
         }
-        setPriceData(mockData)
+
+        const data = await response.json()
+        
+        // Transform the API response to match our format for all tokens
+        const formattedData = {
+          ETH: data.prices
+            .filter(p => p.pair === 'ETH/USD')
+            .map(p => ({
+              timestamp: p.timestamp,
+              price: parseFloat(p.price)
+            })),
+          BTC: data.prices
+            .filter(p => p.pair === 'BTC/USD')
+            .map(p => ({
+              timestamp: p.timestamp,
+              price: parseFloat(p.price)
+            })),
+          SUPRA: data.prices
+            .filter(p => p.pair === 'SUPRA/USD')
+            .map(p => ({
+              timestamp: p.timestamp,
+              price: parseFloat(p.price)
+            })),
+          USDT: data.prices
+            .filter(p => p.pair === 'USDT/USD')
+            .map(p => ({
+              timestamp: p.timestamp,
+              price: parseFloat(p.price)
+            }))
+        }
+
+        setPriceData(formattedData)
       } catch (error) {
         console.error('Error fetching price data:', error)
+        // Updated mock data with more realistic price movements
+        const mockData = {
+          ETH: generateRealisticPriceData(2250, 0.002), // ETH base price $2250, 0.2% volatility
+          BTC: generateRealisticPriceData(42000, 0.001), // BTC base price $42000, 0.1% volatility
+          SUPRA: generateRealisticPriceData(0.15, 0.004), // SUPRA base price $0.15, 0.4% volatility
+          USDT: generateRealisticPriceData(1, 0.0001)  // USDT base price $1, 0.01% volatility
+        }
+        setPriceData(mockData)
       }
     }
 
@@ -70,25 +130,36 @@ const Enter = ({ onBack, onCreateBattle }) => {
     }
   ]
 
+  const handleJoinBattle = () => {
+    if (typeof window.starkey === 'undefined') {
+      window.open('https://chromewebstore.google.com/detail/starkey-wallet/iljfbbgfaklhbgcbmghmhmnpdfddnhie', '_blank')
+      return
+    }
+    // Handle join battle logic
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary overflow-hidden">
       {/* Header */}
       <div className="container mx-auto px-4 py-6">
-        <div className="flex justify-between items-center">
+        <div className="flex items-center relative">
           <button 
             onClick={onBack}
             className="text-gray-400 hover:text-primary transition-colors"
           >
             ← Back to Home
           </button>
-          <button 
-            onClick={onCreateBattle}
-            className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/80 transition-all flex items-center gap-2 group"
-          >
-            <span className="text-xl">+</span>
-            Create Battle
-            <span className="group-hover:translate-x-1 transition-transform">→</span>
-          </button>
+          {/* Centered Create Battle button */}
+          <div className="absolute left-1/2 transform -translate-x-1/2">
+            <button 
+              onClick={onCreateBattle}
+              className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/80 transition-all flex items-center gap-2 group"
+            >
+              <span className="text-xl">+</span>
+              Create Battle
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -169,8 +240,11 @@ const Enter = ({ onBack, onCreateBattle }) => {
               </div>
 
               {/* Action Button */}
-              <button className="w-full bg-primary/10 text-primary px-6 py-3 rounded-lg hover:bg-primary/20 transition-all flex items-center justify-center gap-2 group">
-                Join Battle 🎮
+              <button 
+                onClick={handleJoinBattle}
+                className="w-full bg-primary/10 text-primary px-6 py-3 rounded-lg hover:bg-primary/20 transition-all flex items-center justify-center gap-2 group"
+              >
+                {typeof window.starkey === 'undefined' ? 'Install Starkey' : 'Join Battle 🎮'}
                 <span className="group-hover:translate-x-1 transition-transform">→</span>
               </button>
             </div>

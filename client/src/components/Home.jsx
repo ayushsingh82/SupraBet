@@ -9,11 +9,11 @@ const Home = ({ onEnterArena }) => {
           <div className="relative inline-block">
             <div className="absolute -inset-1 bg-primary/30 blur-xl rounded-full animate-glow"></div>
             <h1 className="text-6xl font-bold text-white mb-6 relative">
-              Battle <span className="text-primary">Arena</span>
+              Token <span className="text-primary">Betting</span>
             </h1>
           </div>
           <p className="text-xl text-gray-300 mb-8 animate-slide-up" style={{animationDelay: '0.2s'}}>
-            Enter the arena. Battle. Win.
+            Predict. Bet. Win Big on Token Prices.
           </p>
           <div className="flex justify-center gap-6 animate-slide-up" style={{animationDelay: '0.4s'}}>
             <button 
@@ -30,35 +30,35 @@ const Home = ({ onEnterArena }) => {
         </div>
       </div>
 
-      {/* Features Section with Enhanced Design */}
+      {/* Features Section */}
       <div className="container mx-auto px-4 py-20">
         <div className="text-center mb-16 animate-slide-up">
           <h2 className="text-4xl font-bold text-white mb-4">
-            Battle. <span className="text-primary">Earn</span>. Dominate.
+            Bet. <span className="text-primary">Win</span>. Profit.
           </h2>
           <p className="text-gray-300 max-w-2xl mx-auto">
-            Experience the future of DeFi gaming on Supra Blockchain
+            Place your bets on token price movements on Supra Network
           </p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             {
-              title: "Token Battles",
-              desc: "Challenge opponents in high-stakes token battles. Winner takes all!",
-              icon: "🏆",
+              title: "Token Betting",
+              desc: "Bet on token price movements and win rewards from the prize pool!",
+              icon: "🎯",
               delay: "0s"
             },
             {
-              title: "Strategic Gaming",
-              desc: "Deploy your tokens wisely. Every move counts in the arena.",
-              icon: "⚔️",
+              title: "Price Prediction",
+              desc: "Use your crypto knowledge to predict price movements accurately.",
+              icon: "📈",
               delay: "0.2s"
             },
             {
-              title: "Fair Play",
-              desc: "Powered by Supra VRF for guaranteed randomness and fairness.",
-              icon: "🎲",
+              title: "Fair Results",
+              desc: "Powered by Supra Oracle for accurate and tamper-proof price feeds.",
+              icon: "🔒",
               delay: "0.4s"
             }
           ].map((feature, index) => (
@@ -77,51 +77,57 @@ const Home = ({ onEnterArena }) => {
         </div>
       </div>
 
-      {/* New Battle Preview Section */}
+      {/* Live Betting Section */}
       <div className="container mx-auto px-4 py-20">
         <div className="bg-secondary/50 backdrop-blur-sm rounded-2xl p-8 md:p-12">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="animate-slide-up">
               <h2 className="text-4xl font-bold text-white mb-6">
-                Live Battles Happening Now
+                Live Token Bets
               </h2>
               <div className="space-y-4">
                 {[
-                  { prize: "1000 SUPRA", players: "8/10", time: "5:00" },
-                  { prize: "500 SUPRA", players: "4/6", time: "2:30" },
-                ].map((battle, index) => (
+                  { tokens: "ETH vs BTC", pool: "1000 SUPRA", participants: "8/10", timeLeft: "5:00" },
+                  { tokens: "SUPRA vs USDT", pool: "500 SUPRA", participants: "4/6", timeLeft: "2:30" },
+                ].map((bet, index) => (
                   <div key={index} className="bg-background/50 p-4 rounded-lg flex justify-between items-center">
                     <div>
-                      <p className="text-primary font-bold">{battle.prize}</p>
+                      <p className="text-white font-bold">{bet.tokens}</p>
+                      <p className="text-sm text-gray-400">Token Pair</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-primary font-bold">{bet.pool}</p>
                       <p className="text-sm text-gray-400">Prize Pool</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-white">{battle.players}</p>
-                      <p className="text-sm text-gray-400">Players</p>
+                      <p className="text-white">{bet.participants}</p>
+                      <p className="text-sm text-gray-400">Bettors</p>
                     </div>
                     <div>
-                      <p className="text-white">{battle.time}</p>
+                      <p className="text-white">{bet.timeLeft}</p>
                       <p className="text-sm text-gray-400">Time Left</p>
                     </div>
                     <button className="bg-primary/20 text-primary px-4 py-2 rounded-lg hover:bg-primary/30 transition-all">
-                      Join
+                      Place Bet
                     </button>
                   </div>
                 ))}
               </div>
             </div>
+
+            {/* Statistics Section */}
             <div className="relative animate-slide-up" style={{animationDelay: '0.2s'}}>
               <div className="absolute -inset-4 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
               <div className="relative bg-secondary/70 rounded-xl p-6 backdrop-blur-sm">
                 <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold text-white">Battle Statistics</h3>
+                  <h3 className="text-2xl font-bold text-white">Betting Statistics</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   {[
-                    { label: "Total Battles", value: "10K+" },
-                    { label: "Prize Pool", value: "$1M+" },
-                    { label: "Active Users", value: "5K+" },
-                    { label: "Win Rate", value: "48%" }
+                    { label: "Total Bets", value: "10K+" },
+                    { label: "Total Pool", value: "$1M+" },
+                    { label: "Active Bettors", value: "5K+" },
+                    { label: "Avg. Win Rate", value: "48%" }
                   ].map((stat, index) => (
                     <div key={index} className="text-center p-4 bg-background/30 rounded-lg">
                       <p className="text-2xl font-bold text-primary mb-1">{stat.value}</p>

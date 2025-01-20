@@ -13,24 +13,41 @@ const CreateBattle = ({ onBack }) => {
     { symbol: 'USDT', name: 'Tether' },
   ]
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log('Battle Creation Data:', formData)
-    // Handle battle creation logic here
+    
+    if (typeof window.starkey === 'undefined') {
+      window.open('https://chromewebstore.google.com/detail/starkey-wallet/iljfbbgfaklhbgcbmghmhmnpdfddnhie', '_blank')
+      return
+    }
+
+    try {
+      const accounts = await window.starkey.request({ 
+        method: 'eth_requestAccounts' 
+      })
+      
+      if (accounts[0]) {
+        console.log('Battle Creation Data:', {
+          ...formData,
+          creator: accounts[0]
+        })
+        // Handle battle creation logic
+      }
+    } catch (error) {
+      console.error('Error creating battle:', error)
+    }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary overflow-hidden">
       {/* Header */}
       <div className="container mx-auto px-4 py-6">
-        <div className="flex justify-between items-center">
-          <button 
-            onClick={onBack}
-            className="text-gray-400 hover:text-primary transition-colors"
-          >
-            ← Back to Battles
-          </button>
-        </div>
+        <button 
+          onClick={onBack}
+          className="text-gray-400 hover:text-primary transition-colors"
+        >
+          ← Back to Battles
+        </button>
       </div>
 
       {/* Main Content */}
@@ -49,18 +66,13 @@ const CreateBattle = ({ onBack }) => {
                   <label className="block text-white font-semibold mb-2">
                     First Token
                   </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={formData.token1}
-                      onChange={(e) => setFormData({...formData, token1: e.target.value})}
-                      placeholder="Enter token symbol"
-                      className="w-full bg-background/50 text-white p-4 rounded-lg border border-gray-700 focus:border-primary outline-none"
-                    />
-                    <div className="absolute right-2 top-2 bottom-2 flex items-center">
-                      <span className="text-2xl">🪙</span>
-                    </div>
-                  </div>
+                  <input
+                    type="text"
+                    value={formData.token1}
+                    onChange={(e) => setFormData({...formData, token1: e.target.value.toUpperCase()})}
+                    placeholder="Enter token symbol"
+                    className="w-full bg-background/50 text-white p-4 rounded-lg border border-gray-700 focus:border-primary outline-none placeholder-gray-500"
+                  />
                 </div>
 
                 {/* Token 2 */}
@@ -68,18 +80,13 @@ const CreateBattle = ({ onBack }) => {
                   <label className="block text-white font-semibold mb-2">
                     Second Token
                   </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={formData.token2}
-                      onChange={(e) => setFormData({...formData, token2: e.target.value})}
-                      placeholder="Enter token symbol"
-                      className="w-full bg-background/50 text-white p-4 rounded-lg border border-gray-700 focus:border-primary outline-none"
-                    />
-                    <div className="absolute right-2 top-2 bottom-2 flex items-center">
-                      <span className="text-2xl">🪙</span>
-                    </div>
-                  </div>
+                  <input
+                    type="text"
+                    value={formData.token2}
+                    onChange={(e) => setFormData({...formData, token2: e.target.value.toUpperCase()})}
+                    placeholder="Enter token symbol"
+                    className="w-full bg-background/50 text-white p-4 rounded-lg border border-gray-700 focus:border-primary outline-none placeholder-gray-500"
+                  />
                 </div>
               </div>
 
