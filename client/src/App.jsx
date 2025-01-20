@@ -3,6 +3,7 @@ import Home from './components/Home'
 import Enter from './components/Enter'
 import CreateBattle from './components/CreateBattle'
 import WalletConnect from './components/WalletConnect'
+import Logo from './components/Logo'
 
 function App() {
   const [currentView, setCurrentView] = useState('home')
@@ -28,9 +29,14 @@ function App() {
 
   return (
     <div>
-      {/* Global Header with Wallet Connect */}
-      <div className="fixed top-0 right-0 m-4 z-50">
-        <WalletConnect />
+      {/* Global Header */}
+      <div className="fixed top-0 left-0 right-0 p-4 z-50 flex justify-between items-center">
+        <div className="ml-4">
+          <Logo />
+        </div>
+        <div>
+          <WalletConnect />
+        </div>
       </div>
       {renderView()}
     </div>

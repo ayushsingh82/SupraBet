@@ -41,12 +41,13 @@ const CreateBattle = ({ onBack }) => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary overflow-hidden">
       {/* Header */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 pt-20">
         <button 
           onClick={onBack}
-          className="text-gray-400 hover:text-primary transition-colors"
+          className="text-gray-400 hover:text-primary transition-colors flex items-center gap-2"
         >
-          ← Back to Battles
+          <span>←</span>
+          Back to Battles
         </button>
       </div>
 

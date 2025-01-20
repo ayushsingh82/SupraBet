@@ -1,4 +1,5 @@
 import React from 'react'
+import Logo from './Logo'
 
 const Home = ({ onEnterArena }) => {
   return (
@@ -6,21 +7,18 @@ const Home = ({ onEnterArena }) => {
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-20">
         <div className="text-center animate-slide-up">
-          <div className="relative inline-block">
-            <div className="absolute -inset-1 bg-primary/30 blur-xl rounded-full animate-glow"></div>
-            <h1 className="text-6xl font-bold text-white mb-6 relative">
-              Token <span className="text-primary">Betting</span>
-            </h1>
+          <div className="relative inline-block mb-8">
+            <Logo size="large" />
           </div>
           <p className="text-xl text-gray-300 mb-8 animate-slide-up" style={{animationDelay: '0.2s'}}>
-            Predict. Bet. Win Big on Token Prices.
+            The Ultimate Token Price Prediction Platform
           </p>
           <div className="flex justify-center gap-6 animate-slide-up" style={{animationDelay: '0.4s'}}>
             <button 
               onClick={onEnterArena}
               className="group bg-primary text-white px-8 py-3 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(255,51,102,0.5)]"
             >
-              Enter Arena
+              Start Betting
               <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">→</span>
             </button>
             <button className="border border-primary text-white px-8 py-3 rounded-lg transition-all duration-300 hover:bg-primary/10 hover:scale-105">
@@ -146,8 +144,8 @@ const Home = ({ onEnterArena }) => {
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-4">
-              <h3 className="text-2xl font-bold text-white mb-4">Battle Arena</h3>
-              <p className="text-gray-400">The ultimate DeFi gaming platform on Supra Blockchain</p>
+              <Logo />
+              <p className="text-gray-400">The ultimate token price prediction platform on Supra Network</p>
               <div className="flex space-x-4">
                 {['Twitter', 'Discord', 'Telegram'].map((social, index) => (
                   <a 
