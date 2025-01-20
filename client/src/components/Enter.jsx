@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import PriceChart from './PriceChart'
 import WalletConnect from './WalletConnect'
+import BetPopup from './BetPopup'
 
 const SUPRA_API_KEY = 'YOUR_SUPRA_API_KEY'
 const SUPRA_API_ENDPOINT = 'https://api.supraoracles.com/oracle/v1'
@@ -30,6 +31,9 @@ const Enter = ({ onBack, onCreateBattle }) => {
     SUPRA: [],
     USDT: []
   })
+
+  const [selectedBattle, setSelectedBattle] = useState(null)
+  const [showBetPopup, setShowBetPopup] = useState(false)
 
   useEffect(() => {
     const fetchPriceData = async () => {
@@ -130,12 +134,25 @@ const Enter = ({ onBack, onCreateBattle }) => {
     }
   ]
 
-  const handleJoinBattle = () => {
-    if (typeof window.starkey === 'undefined') {
+  const handleJoinBattle = (battle) => {
+    if (typeof window.ethereum === 'undefined') {
       window.open('https://chromewebstore.google.com/detail/starkey-wallet/iljfbbgfaklhbgcbmghmhmnpdfddnhie', '_blank')
       return
     }
-    // Handle join battle logic
+    setSelectedBattle(battle)
+    setShowBetPopup(true)
+  }
+
+  const handleBetConfirm = async (token, amount) => {
+    try {
+      console.log('Placing bet:', { token, amount, battleId: selectedBattle.id })
+      // Add your bet placement logic here
+      
+      setShowBetPopup(false)
+      setSelectedBattle(null)
+    } catch (error) {
+      console.error('Error placing bet:', error)
+    }
   }
 
   return (
@@ -242,16 +259,26 @@ const Enter = ({ onBack, onCreateBattle }) => {
 
               {/* Action Button */}
               <button 
-                onClick={handleJoinBattle}
+                onClick={() => handleJoinBattle(battle)}
                 className="w-full bg-primary/10 text-primary px-6 py-3 rounded-lg hover:bg-primary/20 transition-all flex items-center justify-center gap-2 group"
               >
-                {typeof window.starkey === 'undefined' ? 'Install Starkey' : 'Join Battle 🎮'}
+                {typeof window.ethereum === 'undefined' ? 'Install Wallet' : 'Join Battle 🎮'}
                 <span className="group-hover:translate-x-1 transition-transform">→</span>
               </button>
             </div>
           ))}
         </div>
       </div>
+
+      <BetPopup
+        isOpen={showBetPopup}
+        onClose={() => {
+          setShowBetPopup(false)
+          setSelectedBattle(null)
+        }}
+        battle={selectedBattle}
+        onConfirm={handleBetConfirm}
+      />
     </div>
   )
 }
