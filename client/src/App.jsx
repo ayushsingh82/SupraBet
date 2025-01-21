@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import Home from './components/Home'
 import Enter from './components/Enter'
 import CreateBattle from './components/CreateBattle'
@@ -12,12 +12,9 @@ function App() {
 
   const renderView = () => {
     console.log('Rendering view:', currentView) // Debug log
-    switch(currentView) {
+    switch (currentView) {
       case 'home':
-        return <Home onEnterArena={() => {
-          console.log('Enter Arena clicked') // Debug log
-          setCurrentView('enter')
-        }} />
+        return <Home onEnterArena={() => setCurrentView('enter')} />
       case 'enter':
         return <Enter onBack={() => setCurrentView('home')} onCreateBattle={() => setCurrentView('create')} />
       case 'create':
@@ -28,9 +25,8 @@ function App() {
   }
 
   return (
-    <div>
-      {/* Global Header */}
-      <div className="fixed top-0 left-0 right-0 p-4 z-50 flex justify-between items-center">
+    <div className="min-h-screen bg-background text-white">
+      <div className="container mx-auto px-4 py-8 flex justify-between items-center">
         <div className="ml-4">
           <Logo />
         </div>
