@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { getProvider } from '../utils/wallet'
 
 const SUPRA_CHAIN_ID = '0x1BC' // 444 in hex
 const CONTRACT_ADDRESS = '0xb8a37ea0164f53c244b08d41614ef7fa66b4d3abdc31ff2c1cde5b68aae8456'
@@ -23,6 +24,31 @@ const CreateBattle = ({ onBack }) => {
     endTime: '',
   })
   const [isCreating, setIsCreating] = useState(false)
+  const [error, setError] = useState(null)
+  const [provider, setProvider] = useState(null)
+
+  useEffect(() => {
+    const checkProvider = async () => {
+      try {
+        const p = getProvider()
+        setProvider(p)
+        if (!p) {
+          setError('Please install Starkey wallet')
+        } else {
+          // Check if connected
+          const accounts = await p.account()
+          if (!accounts || !accounts.length) {
+            setError('Please connect your wallet')
+          }
+        }
+      } catch (err) {
+        console.error('Provider check error:', err)
+        setError('Error checking wallet connection')
+      }
+    }
+    
+    checkProvider()
+  }, [])
 
   const popularTokens = [
     { symbol: 'ETH', name: 'Ethereum' },
@@ -31,141 +57,80 @@ const CreateBattle = ({ onBack }) => {
     { symbol: 'USDT', name: 'Tether' },
   ]
 
-  const checkAndSwitchNetwork = async () => {
-    try {
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' })
-      
-      if (chainId !== SUPRA_CHAIN_ID) {
-        try {
-          // Try switching to Supra network
-          await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: SUPRA_CHAIN_ID }],
-          })
-        } catch (switchError) {
-          // If network doesn't exist, add it
-          if (switchError.code === 4902) {
-            try {
-              await window.ethereum.request({
-                method: 'wallet_addEthereumChain',
-                params: [SUPRA_NETWORK]
-              })
-            } catch (addError) {
-              console.error('Error adding network:', addError)
-              throw new Error('Failed to add Supra network. Please add it manually.')
-            }
-          } else {
-            throw new Error('Please switch to Supra network in your wallet.')
-          }
-        }
-      }
-      return true
-    } catch (error) {
-      console.error('Error switching network:', error)
-      throw error
-    }
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
-    if (typeof window.ethereum === 'undefined') {
-      window.open('https://chromewebstore.google.com/detail/starkey-wallet/iljfbbgfaklhbgcbmghmhmnpdfddnhie', '_blank')
-      return
-    }
+    setError(null)
+    setIsCreating(true)
 
     try {
-      setIsCreating(true)
-
-      // First ensure we're on Supra network
-      const networkSwitched = await checkAndSwitchNetwork()
-      if (!networkSwitched) {
-        throw new Error('Please switch to Supra network')
+      if (!provider) {
+        throw new Error('Please install Starkey wallet')
       }
 
-      const accounts = await window.ethereum.request({ 
-        method: 'eth_requestAccounts' 
-      })
-      
-      if (accounts[0]) {
-        // Calculate end time in seconds from now
-        const endTimeInSeconds = Math.floor(Date.now() / 1000) + (parseInt(formData.endTime) * 3600)
+      // Get current account
+      const accounts = await provider.account()
+      if (!accounts || !accounts[0]) {
+        throw new Error('Please connect your wallet')
+      }
 
-        // Format the function call according to Move contract
-        const functionSignature = 'create_campaign'
-        const functionArgs = [endTimeInSeconds.toString()]
-        
-        // Create the transaction payload
-        const txPayload = {
-          from: accounts[0],
-          to: CONTRACT_ADDRESS,
-          value: '0x0',
-          // Format data according to Move contract call format
-          data: '0x' + Buffer.from(
-            JSON.stringify({
-              function: `${CONTRACT_ADDRESS}::betting_campaign::${functionSignature}`,
-              type_args: [],
-              args: functionArgs
-            })
-          ).toString('hex')
-        }
+      // Calculate end time in seconds from now
+      const endTimeInSeconds = Math.floor(Date.now() / 1000) + (parseInt(formData.endTime) * 3600)
 
-        console.log('Transaction Payload:', txPayload) // Debug log
+      // Create campaign transaction
+      const txPayload = {
+        function: `${CONTRACT_ADDRESS}::betting_campaign::create_campaign`,
+        type_args: [],
+        args: [endTimeInSeconds.toString()]
+      }
 
+      console.log('Sending transaction:', txPayload)
+
+      try {
         // Send transaction
-        const txHash = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [txPayload]
-        })
+        const txHash = await provider.sendTransaction(txPayload)
+        console.log('Transaction sent:', txHash)
 
-        console.log('Battle Created:', {
-          ...formData,
-          creator: accounts[0],
-          txHash
-        })
+        // Wait for transaction confirmation
+        const receipt = await provider.waitForTransaction(txHash)
+        console.log('Transaction confirmed:', receipt)
 
-        // Show success message
         alert('Battle created successfully!')
         onBack()
+      } catch (txError) {
+        console.error('Transaction error:', txError)
+        throw new Error(txError.message || 'Transaction failed')
       }
     } catch (error) {
       console.error('Error creating battle:', error)
-      if (error.code === 4001) {
-        alert('Transaction rejected by user')
-      } else if (error.message.includes('insufficient funds')) {
-        alert('Insufficient funds to create battle')
-      } else {
-        alert(error.message || 'Failed to create battle. Please try again.')
-      }
+      setError(error.message || 'Failed to create battle')
     } finally {
       setIsCreating(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary overflow-hidden">
-      {/* Header */}
-      <div className="container mx-auto px-4 pt-20">
-        <button 
-          onClick={onBack}
-          className="text-gray-400 hover:text-primary transition-colors flex items-center gap-2"
-        >
-          <span>←</span>
-          Back to Battles
-        </button>
-      </div>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-12">
+    <div className="min-h-screen bg-background py-12">
+      <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-4xl font-bold text-white mb-12 text-center">
-            Create New <span className="text-primary">Battle</span>
-          </h1>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-bold text-white">Create Battle</h2>
+            <button
+              onClick={onBack}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              ← Back
+            </button>
+          </div>
 
-          <div className="bg-secondary/50 backdrop-blur-sm rounded-2xl p-8">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Token Pair Selection */}
-              <div className="grid md:grid-cols-2 gap-8">
+          {error && (
+            <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg mb-6">
+              {error}
+            </div>
+          )}
+
+          <div className="bg-secondary/50 rounded-2xl p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Token 1 */}
                 <div className="space-y-4">
                   <label className="block text-white font-semibold mb-2">
@@ -264,11 +229,13 @@ const CreateBattle = ({ onBack }) => {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={!formData.token1 || !formData.token2 || !formData.endTime || isCreating}
+                disabled={!formData.token1 || !formData.token2 || !formData.endTime || isCreating || !provider}
                 className="w-full bg-primary text-white px-6 py-4 rounded-lg hover:bg-primary/80 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreating ? (
                   <span className="animate-pulse">Creating Battle...</span>
+                ) : !provider ? (
+                  'Install Starkey Wallet'
                 ) : (
                   'Create Battle'
                 )}

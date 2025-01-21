@@ -19,7 +19,8 @@ export const SUPRA_CONTRACT_ADDRESS = '0xb8a37ea0164f53c244b08d41614ef7fa66b4d3a
 
 let supraClient = null
 
-const getProvider = () => {
+// Export the getProvider function
+export const getProvider = () => {
   if ("starkey" in window) {
     const provider = window.starkey?.supra;
     if (provider) {
@@ -32,7 +33,11 @@ const getProvider = () => {
 const initSupraClient = async () => {
   if (!supraClient) {
     try {
-      supraClient = await SupraClient.init('https://rpc-testnet.supra.com/')
+      // Update initialization to use object parameter
+      supraClient = await SupraClient.init({
+        rpcUrl: 'https://rpc-testnet.supra.com/',
+        chainId: SUPRA_CHAIN_ID
+      });
       console.log('Supra client initialized')
     } catch (error) {
       console.error('Failed to initialize Supra client:', error)

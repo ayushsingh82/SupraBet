@@ -38,59 +38,22 @@ const Enter = ({ onBack, onCreateBattle }) => {
   useEffect(() => {
     const fetchPriceData = async () => {
       try {
-        // Fetch price data for all token pairs
-        const response = await fetch(`${SUPRA_API_ENDPOINT}/prices`, {
+        const response = await fetch('https://oracle.supraoracles.com/api/v1/prices', {
           headers: {
-            'Authorization': `Bearer ${SUPRA_API_KEY}`,
-            'Content-Type': 'application/json'
+            'Accept': 'application/json'
           }
         })
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch price data')
-        }
-
-        const data = await response.json()
         
-        // Transform the API response to match our format for all tokens
-        const formattedData = {
-          ETH: data.prices
-            .filter(p => p.pair === 'ETH/USD')
-            .map(p => ({
-              timestamp: p.timestamp,
-              price: parseFloat(p.price)
-            })),
-          BTC: data.prices
-            .filter(p => p.pair === 'BTC/USD')
-            .map(p => ({
-              timestamp: p.timestamp,
-              price: parseFloat(p.price)
-            })),
-          SUPRA: data.prices
-            .filter(p => p.pair === 'SUPRA/USD')
-            .map(p => ({
-              timestamp: p.timestamp,
-              price: parseFloat(p.price)
-            })),
-          USDT: data.prices
-            .filter(p => p.pair === 'USDT/USD')
-            .map(p => ({
-              timestamp: p.timestamp,
-              price: parseFloat(p.price)
-            }))
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
         }
-
-        setPriceData(formattedData)
+        
+        const data = await response.json()
+        return data
       } catch (error) {
         console.error('Error fetching price data:', error)
-        // Updated mock data with more realistic price movements
-        const mockData = {
-          ETH: generateRealisticPriceData(2250, 0.002), // ETH base price $2250, 0.2% volatility
-          BTC: generateRealisticPriceData(42000, 0.001), // BTC base price $42000, 0.1% volatility
-          SUPRA: generateRealisticPriceData(0.15, 0.004), // SUPRA base price $0.15, 0.4% volatility
-          USDT: generateRealisticPriceData(1, 0.0001)  // USDT base price $1, 0.01% volatility
-        }
-        setPriceData(mockData)
+        // Return some mock data or handle the error appropriately
+        return []
       }
     }
 
