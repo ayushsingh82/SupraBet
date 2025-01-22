@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { getProvider } from '../utils/wallet'
-import { BCS, TxnBuilderTypes } from 'supra-l1-sdk'
+import { SupraClient, BCS } from 'supra-l1-sdk'
+import Footer from './Footer'
 
 const CONTRACT_ADDRESS = '0xb8a37ea0164f53c244b08d41614ef7fa66b4d3abdc31ff2c1cde5b68aae8456'
 
@@ -59,21 +60,29 @@ const CreateBattle = ({ onBack }) => {
       }
 
       try {
-        // Calculate end time (24 hours from now in seconds)
-        const endTime = Math.floor(Date.now() / 1000) + (24 * 60 * 60)
-
-        // Create transaction payload
+        // Create transaction payload with hex string addresses
+        const functionPath = `${CONTRACT_ADDRESS}::betting_campaign::create_campaign`
+        
         const payload = {
-          function: `${CONTRACT_ADDRESS}::betting_campaign::create_campaign`,
-          arguments: [endTime.toString()],
+          type: 'entry_function_payload',
+          function: functionPath,
           type_arguments: [],
-          type: 'entry_function_payload'
+          arguments: [],
+          module_address: CONTRACT_ADDRESS
         }
 
-        console.log('Sending transaction with payload:', payload)
+        // Format transaction for Starkey
+        const txRequest = {
+          from: accounts[0],
+          to: CONTRACT_ADDRESS,
+          data: payload,
+          chainId: '0x1BC' // Supra testnet chain ID
+        }
 
-        // Send transaction using sendTransaction
-        const txHash = await provider.sendTransaction(payload)
+        console.log('Sending transaction:', txRequest)
+
+        // Send transaction
+        const txHash = await provider.sendTransaction(txRequest)
         console.log('Transaction sent:', txHash)
 
         alert('Battle created successfully!')
@@ -91,8 +100,8 @@ const CreateBattle = ({ onBack }) => {
   }
 
   return (
-    <div className="min-h-screen bg-background py-12">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-3xl font-bold text-white">Create Battle</h2>
@@ -205,6 +214,7 @@ const CreateBattle = ({ onBack }) => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

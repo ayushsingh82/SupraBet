@@ -115,3 +115,57 @@ export const isSupraNetwork = async () => {
 }
 
 export const getSupraClient = () => supraClient 
+
+const validatePayload = (payload) => {
+  if (!payload.moduleAddress || !payload.moduleName || !payload.functionName) {
+    throw new Error('Invalid transaction payload: Missing required fields')
+  }
+}
+
+const formatError = (err) => {
+  return err instanceof Error ? err.message : String(err)
+}
+
+export const executeTransaction = async (provider, payload) => {
+  try {
+    if (!provider) {
+      throw new Error('Wallet not connected')
+    }
+
+    const accounts = await provider.account()
+    if (!accounts || !accounts[0]) {
+      throw new Error('No account found')
+    }
+
+    // Format transaction request
+    const txRequest = {
+      from: accounts[0],
+      to: payload.module_address,
+      data: {
+        type: 'entry_function_payload',
+        function: payload.function,
+        type_arguments: payload.type_arguments || [],
+        arguments: payload.arguments || []
+      },
+      chainId: SUPRA_CHAIN_ID
+    }
+
+    const txHash = await provider.sendTransaction(txRequest)
+
+    return {
+      hash: txHash,
+      success: true,
+      timestamp: Date.now()
+    }
+  } catch (err) {
+    const errorMessage = formatError(err)
+    console.error('Transaction failed:', errorMessage)
+
+    return {
+      hash: '',
+      success: false,
+      error: errorMessage,
+      timestamp: Date.now()
+    }
+  }
+} 
