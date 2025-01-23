@@ -1,78 +1,77 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
+import { createChart } from 'lightweight-charts'
 
-const PriceChart = ({ data, symbol }) => {
-  // Add check for empty or invalid data
-  if (!data || data.length === 0) {
-    return (
-      <div className="w-full text-center text-sm text-gray-400">
-        Loading price data...
-      </div>
-    )
-  }
+const PriceChart = ({ data, symbol, height = 120 }) => {
+  const chartContainerRef = useRef()
+  const chartRef = useRef()
 
-  // Calculate chart dimensions
-  const width = 120
-  const height = 40
-  const padding = 5
+  useEffect(() => {
+    if (!data || data.length === 0) return
 
-  try {
-    // Find min and max values for scaling
-    const prices = data.map(point => point?.price || 0)
+    // Create chart
+    const chart = createChart(chartContainerRef.current, {
+      height: height,
+      layout: {
+        background: { color: 'transparent' },
+        textColor: '#d1d5db',
+      },
+      grid: {
+        vertLines: { visible: false },
+        horzLines: { visible: false }
+      },
+      timeScale: {
+        visible: false,
+      },
+      rightPriceScale: {
+        visible: false,
+      },
+      crosshair: {
+        vertLine: { visible: false },
+        horzLine: { visible: false }
+      },
+      handleScroll: false,
+      handleScale: false,
+    })
+
+    // Create area series
+    const areaSeries = chart.addAreaSeries({
+      lineColor: '#FF3366',
+      topColor: 'rgba(255, 51, 102, 0.2)',
+      bottomColor: 'rgba(255, 51, 102, 0)',
+      lineWidth: 2,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    })
+
+    // Normalize data to show only direction
+    const prices = data.map(item => parseFloat(item.price))
     const minPrice = Math.min(...prices)
     const maxPrice = Math.max(...prices)
-    const priceRange = maxPrice - minPrice
+    const range = maxPrice - minPrice
 
-    // Calculate points for the sparkline
-    const points = data.map((point, index) => {
-      const x = (index / (data.length - 1)) * (width - 2 * padding) + padding
-      const y = height - padding - ((point.price - minPrice) / priceRange) * (height - 2 * padding)
-      return `${x},${y}`
-    }).join(' ')
+    const normalizedData = data.map(item => ({
+      time: item.timestamp / 1000,
+      value: ((parseFloat(item.price) - minPrice) / range) * 100
+    }))
 
-    // Calculate price change percentage
-    const priceChange = ((data[data.length - 1].price - data[0].price) / data[0].price) * 100
-    const isPositive = priceChange >= 0
+    areaSeries.setData(normalizedData)
 
-    return (
-      <div className="w-full">
-        {/* Price Change */}
-        <div className={`text-sm mb-1 ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
-          {isPositive ? '↑' : '↓'} {Math.abs(priceChange).toFixed(2)}%
-        </div>
+    // Fit content
+    chart.timeScale().fitContent()
 
-        {/* Chart */}
-        <svg width={width} height={height} className="w-full">
-          <defs>
-            <linearGradient id={`gradient-${symbol}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={isPositive ? 'rgb(34,197,94)' : 'rgb(239,68,68)'} stopOpacity="0.2" />
-              <stop offset="100%" stopColor={isPositive ? 'rgb(34,197,94)' : 'rgb(239,68,68)'} stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          
-          {/* Area under the line */}
-          <path
-            d={`M ${padding},${height - padding} ${points} ${width - padding},${height - padding} Z`}
-            fill={`url(#gradient-${symbol})`}
-          />
-          
-          {/* Line */}
-          <path
-            d={`M ${points}`}
-            fill="none"
-            stroke={isPositive ? 'rgb(34,197,94)' : 'rgb(239,68,68)'}
-            strokeWidth="1.5"
-          />
-        </svg>
-      </div>
-    )
-  } catch (error) {
-    console.error('Error rendering chart:', error)
-    return (
-      <div className="w-full text-center text-sm text-gray-400">
-        Error loading chart
-      </div>
-    )
-  }
+    chartRef.current = chart
+
+    return () => {
+      chart.remove()
+    }
+  }, [data, height])
+
+  return (
+    <div 
+      ref={chartContainerRef} 
+      className="w-full rounded-xl overflow-hidden bg-background/20 backdrop-blur-sm"
+    />
+  )
 }
 
 export default PriceChart 

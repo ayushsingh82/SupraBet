@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import PriceChart from './PriceChart'
 import WalletConnect from './WalletConnect'
 import BetPopup from './BetPopup'
+import useCountdown from '../hooks/useCountdown'
 
 const SUPRA_API_KEY = 'YOUR_SUPRA_API_KEY'
 const SUPRA_API_ENDPOINT = 'https://api.supraoracles.com/oracle/v1'
@@ -22,7 +23,7 @@ const generateRealisticPriceData = (basePrice, volatility, hoursOfData = 24) => 
   })
 }
 
-const Enter = ({ onBack, onCreateBattle }) => {
+const Enter = ({ onBack, onCreateBattle, onTransfer }) => {
   console.log('Enter component rendered') // Debug log
 
   const [priceData, setPriceData] = useState({
@@ -36,66 +37,71 @@ const Enter = ({ onBack, onCreateBattle }) => {
   const [showBetPopup, setShowBetPopup] = useState(false)
 
   useEffect(() => {
-    const fetchPriceData = async () => {
+    const fetchSupraPrices = async () => {
       try {
-        const response = await fetch('https://oracle.supraoracles.com/api/v1/prices', {
+        const response = await fetch('https://api.supraoracles.com/oracle/v1/prices', {
           headers: {
             'Accept': 'application/json'
           }
         })
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
+        if (!response.ok) throw new Error('Failed to fetch prices')
         
         const data = await response.json()
-        return data
+        
+        // Process data for charts
+        const processedData = {
+          ETH: data.prices
+            .filter(p => p.symbol === 'ETH/USD')
+            .map(p => ({
+              timestamp: p.timestamp,
+              price: p.price
+            })),
+          BTC: data.prices
+            .filter(p => p.symbol === 'BTC/USD')
+            .map(p => ({
+              timestamp: p.timestamp,
+              price: p.price
+            }))
+        }
+        
+        setPriceData(processedData)
       } catch (error) {
-        console.error('Error fetching price data:', error)
-        // Return some mock data or handle the error appropriately
-        return []
+        console.error('Error fetching Supra prices:', error)
+        // Fallback to mock data with updated base prices
+        setPriceData({
+          ETH: generateRealisticPriceData(3289, 0.002),
+          BTC: generateRealisticPriceData(98450, 0.001)
+        })
       }
     }
 
-    fetchPriceData()
-    const interval = setInterval(fetchPriceData, 60000) // Update every minute
+    fetchSupraPrices()
+    const interval = setInterval(fetchSupraPrices, 30000)
+    
     return () => clearInterval(interval)
   }, [])
 
-  const ongoingBattles = [
-    {
-      id: 1,
-      token1: {
-        symbol: "ETH",
-        amount: "10.5",
-        usdValue: "23,450",
-      },
-      token2: {
-        symbol: "BTC",
-        amount: "0.85",
-        usdValue: "25,500",
-      },
-      totalPlayers: 156,
-      timeLeft: "23:45:30",
-      status: "LIVE"
+  const activeBattle = {
+    id: 1,
+    token1: {
+      symbol: "ETH",
+      price: "$3,289",
+      change: "+3.2%",
+      trend: "↗"
     },
-    {
-      id: 2,
-      token1: {
-        symbol: "SUPRA",
-        amount: "50000",
-        usdValue: "15,000",
-      },
-      token2: {
-        symbol: "USDT",
-        amount: "15000",
-        usdValue: "15,000",
-      },
-      totalPlayers: 89,
-      timeLeft: "22:15:45",
-      status: "LIVE"
-    }
-  ]
+    token2: {
+      symbol: "BTC",
+      price: "$98,450",
+      change: "-1.8%",
+      trend: "↘"
+    },
+    initialTimeLeft: "23:45:30", // Initial time
+    status: "LIVE",
+    totalPlayers: 156
+  }
+
+  const timeLeft = useCountdown(activeBattle.initialTimeLeft)
 
   const handleJoinBattle = (battle) => {
     if (typeof window.ethereum === 'undefined') {
@@ -120,119 +126,137 @@ const Enter = ({ onBack, onCreateBattle }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary overflow-hidden">
-      {/* Header */}
-      <div className="container mx-auto px-4 pt-20">
-        <div className="flex items-center relative">
-          <button 
-            onClick={onBack}
-            className="text-gray-400 hover:text-primary transition-colors flex items-center gap-2"
-          >
-            <span>←</span>
-            Back to Home
-          </button>
-          {/* Centered Create Battle button */}
-          <div className="absolute left-1/2 transform -translate-x-1/2">
-            <button 
-              onClick={onCreateBattle}
-              className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/80 transition-all flex items-center gap-2 group"
+      {/* Header section */}
+      <div className="container mx-auto px-4 py-8"> {/* Reduced padding */}
+        <div className="flex items-center justify-between mb-8"> {/* Reduced margin */}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onBack}
+              className="text-gray-400 hover:text-white transition-colors"
             >
-              <span className="text-xl">+</span>
-              Create Battle
-              <span className="group-hover:translate-x-1 transition-transform">→</span>
+              ← Back
+            </button>
+            <h2 className="text-2xl font-bold text-white">Battle Arena</h2> {/* Smaller text */}
+          </div>
+          <div className="flex gap-4">
+            <button
+              onClick={onTransfer}
+              className="bg-primary/10 text-primary px-4 py-2 rounded-lg hover:bg-primary/20 transition-all flex items-center gap-2 text-sm"
+            >
+              <span>Transfer</span>
+              <span>↗</span>
+            </button>
+            <button
+              onClick={onCreateBattle}
+              className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/80 transition-all flex items-center gap-2 text-sm"
+            >
+              <span>Create Battle</span>
+              <span>+</span>
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-12">
-        <h1 className="text-4xl font-bold text-white mb-12">
-          Active <span className="text-primary">Battles</span>
-        </h1>
+        {/* Battle Cards Container */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {/* Battle Card */}
+          <div className="bg-secondary/50 backdrop-blur-sm rounded-xl p-4 hover:shadow-[0_0_30px_rgba(255,51,102,0.2)] transition-all relative overflow-hidden">
+            {/* Animated Background */}
+            <div className="absolute inset-0">
+              <div className="absolute top-0 left-1/4 w-32 h-32 bg-primary/5 rounded-full filter blur-3xl animate-pulse-slow"></div>
+              <div className="absolute bottom-0 right-1/4 w-32 h-32 bg-secondary/10 rounded-full filter blur-3xl animate-pulse-slow" style={{animationDelay: '1s'}}></div>
+            </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {ongoingBattles.map((battle) => (
-            <div 
-              key={battle.id}
-              className="bg-secondary/50 backdrop-blur-sm rounded-2xl p-8 hover:shadow-[0_0_30px_rgba(255,51,102,0.2)] transition-all hover:scale-[1.02] cursor-pointer"
-            >
+            {/* Content */}
+            <div className="relative">
               {/* Battle Header */}
-              <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-bold text-white">
-                  {battle.token1.symbol} vs {battle.token2.symbol}
-                </h2>
-                <div className="flex items-center gap-3">
-                  <span className="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm font-semibold animate-pulse">
-                    {battle.status}
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-bold text-white">Current Round</h3>
+                <div className="flex items-center gap-2">
+                  <span className="animate-ping absolute h-2 w-2 rounded-full bg-primary opacity-75"></span>
+                  <span className="relative rounded-full h-2 w-2 bg-primary"></span>
+                  <span className="bg-primary/20 text-primary px-2 py-0.5 rounded-full text-xs font-semibold">
+                    LIVE
                   </span>
                 </div>
               </div>
 
-              {/* VS Section */}
-              <div className="flex items-center justify-between mb-8">
-                <div className="text-center flex-1">
-                  <div className="w-20 h-20 bg-background/50 rounded-full flex items-center justify-center mb-3 mx-auto group-hover:animate-float">
-                    <span className="text-2xl font-bold text-primary">{battle.token1.symbol}</span>
-                  </div>
-                  <p className="text-white font-semibold mb-1">{battle.token1.amount} {battle.token1.symbol}</p>
-                  <p className="text-gray-400 text-sm">${battle.token1.usdValue}</p>
-                  {priceData[battle.token1.symbol] && priceData[battle.token1.symbol].length > 0 && (
-                    <div className="mt-2">
-                      <PriceChart data={priceData[battle.token1.symbol]} symbol={battle.token1.symbol} />
+              {/* Timer */}
+              <div className="text-center mb-4">
+                <div className="inline-block bg-background/30 backdrop-blur-sm px-4 py-2 rounded-lg">
+                  <p className="text-xs text-gray-400">Time Remaining</p>
+                  <div className="flex items-center justify-center gap-1">
+                    <div className="bg-background/40 px-2 py-1 rounded">
+                      <span className="text-xl font-bold text-primary">{timeLeft.split(':')[0]}</span>
+                      <span className="text-xs text-gray-400">h</span>
                     </div>
-                  )}
-                </div>
-                <div className="flex flex-col items-center px-4">
-                  <div className="text-primary text-3xl font-bold mb-2">VS</div>
-                  <div className="px-4 py-2 bg-background/30 rounded-lg">
-                    <p className="text-white text-sm font-medium">{battle.timeLeft}</p>
-                    <p className="text-gray-400 text-xs">Time Left</p>
-                  </div>
-                </div>
-                <div className="text-center flex-1">
-                  <div className="w-20 h-20 bg-background/50 rounded-full flex items-center justify-center mb-3 mx-auto group-hover:animate-float">
-                    <span className="text-2xl font-bold text-primary">{battle.token2.symbol}</span>
-                  </div>
-                  <p className="text-white font-semibold mb-1">{battle.token2.amount} {battle.token2.symbol}</p>
-                  <p className="text-gray-400 text-sm">${battle.token2.usdValue}</p>
-                  {priceData[battle.token2.symbol] && priceData[battle.token2.symbol].length > 0 && (
-                    <div className="mt-2">
-                      <PriceChart data={priceData[battle.token2.symbol]} symbol={battle.token2.symbol} />
+                    <span className="text-primary">:</span>
+                    <div className="bg-background/40 px-2 py-1 rounded">
+                      <span className="text-xl font-bold text-primary">{timeLeft.split(':')[1]}</span>
+                      <span className="text-xs text-gray-400">m</span>
                     </div>
-                  )}
+                    <span className="text-primary">:</span>
+                    <div className="bg-background/40 px-2 py-1 rounded">
+                      <span className="text-xl font-bold text-primary">{timeLeft.split(':')[2]}</span>
+                      <span className="text-xs text-gray-400">s</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Battle Info */}
-              <div className="bg-background/30 rounded-xl p-4 mb-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center">
-                    <p className="text-gray-400 text-sm mb-1">Total Players</p>
-                    <p className="text-white font-bold text-lg">{battle.totalPlayers}</p>
-                  </div>
-                  <div className="text-center border-l border-gray-700">
-                    <p className="text-gray-400 text-sm mb-1">Total Value</p>
-                    <p className="text-primary font-bold text-lg">
-                      ${(parseFloat(battle.token1.usdValue.replace(',', '')) + 
-                         parseFloat(battle.token2.usdValue.replace(',', ''))).toLocaleString()}
+              {/* Token Comparison */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                {[activeBattle.token1, activeBattle.token2].map((token, i) => (
+                  <div 
+                    key={i}
+                    className={`text-center ${i === 0 ? 'border-r border-gray-700' : ''}`}
+                  >
+                    <div className="w-12 h-12 bg-background/30 backdrop-blur-sm rounded-full flex items-center justify-center mb-2 mx-auto">
+                      <span className="text-base font-bold text-primary">{token.symbol}</span>
+                    </div>
+                    <p className="text-base font-bold text-white mb-1">{token.price}</p>
+                    <p className={`text-xs font-medium flex items-center justify-center gap-1 mb-2 ${
+                      token.change.startsWith('+') ? 'text-green-500' : 'text-red-500'
+                    }`}>
+                      <span>{token.trend}</span>
+                      <span>{token.change}</span>
                     </p>
+                    
+                    {/* Price Chart */}
+                    <div className="mt-1">
+                      <PriceChart 
+                        data={priceData[token.symbol]} 
+                        symbol={token.symbol}
+                        height={80} // Reduced height
+                      />
+                    </div>
                   </div>
+                ))}
+              </div>
+
+              {/* Players Count */}
+              <div className="text-center mb-4">
+                <div className="inline-flex items-center gap-1 bg-background/30 backdrop-blur-sm px-3 py-1 rounded-lg text-xs">
+                  <span className="text-gray-400">Players:</span>
+                  <span className="font-bold text-white">{activeBattle.totalPlayers}</span>
                 </div>
               </div>
 
               {/* Action Button */}
-              <button 
-                onClick={() => handleJoinBattle(battle)}
-                className="w-full bg-primary/10 text-primary px-6 py-3 rounded-lg hover:bg-primary/20 transition-all flex items-center justify-center gap-2 group"
+              <button
+                onClick={() => handleJoinBattle(activeBattle)}
+                className="w-full bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-all flex items-center justify-center gap-2 group font-bold text-sm"
               >
-                {typeof window.ethereum === 'undefined' ? 'Install Wallet' : 'Join Battle 🎮'}
+                Join Battle
                 <span className="group-hover:translate-x-1 transition-transform">→</span>
               </button>
             </div>
-          ))}
+          </div>
+
+          {/* You can add more battle cards here */}
         </div>
       </div>
 
+      {/* Bet Popup */}
       <BetPopup
         isOpen={showBetPopup}
         onClose={() => {

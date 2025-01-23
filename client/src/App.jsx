@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import Home from './components/Home'
 import Enter from './components/Enter'
 import CreateBattle from './components/CreateBattle'
+import Transfer from './components/Transfer'
 import WalletConnect from './components/WalletConnect'
 import Logo from './components/Logo'
 
@@ -16,9 +17,17 @@ function App() {
       case 'home':
         return <Home onEnterArena={() => setCurrentView('enter')} />
       case 'enter':
-        return <Enter onBack={() => setCurrentView('home')} onCreateBattle={() => setCurrentView('create')} />
+        return (
+          <Enter 
+            onBack={() => setCurrentView('home')} 
+            onCreateBattle={() => setCurrentView('create')}
+            onTransfer={() => setCurrentView('transfer')}
+          />
+        )
       case 'create':
         return <CreateBattle onBack={() => setCurrentView('enter')} />
+      case 'transfer':
+        return <Transfer onBack={() => setCurrentView('enter')} />
       default:
         return <Home onEnterArena={() => setCurrentView('enter')} />
     }
