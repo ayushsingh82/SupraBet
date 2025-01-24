@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { createChart } from 'lightweight-charts'
 
-const PriceChart = ({ data, symbol, height = 120 }) => {
+const PriceChart = ({ data, height = 80 }) => {
   const chartContainerRef = useRef()
   const chartRef = useRef()
 
@@ -33,14 +33,21 @@ const PriceChart = ({ data, symbol, height = 120 }) => {
       handleScale: false,
     })
 
-    // Create area series
+    // Create area series without symbol label
     const areaSeries = chart.addAreaSeries({
       lineColor: '#FF3366',
       topColor: 'rgba(255, 51, 102, 0.2)',
       bottomColor: 'rgba(255, 51, 102, 0)',
       lineWidth: 2,
       priceLineVisible: false,
-      lastValueVisible: false,
+      lastValueVisible: false, // This ensures no symbol/value is shown
+      crosshairMarkerVisible: false, // Removes crosshair marker
+      autoscaleInfoProvider: () => ({
+        priceRange: {
+          minValue: 0,
+          maxValue: 100,
+        },
+      }),
     })
 
     // Normalize data to show only direction

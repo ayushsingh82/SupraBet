@@ -8,8 +8,14 @@ import Logo from './components/Logo'
 
 function App() {
   const [currentView, setCurrentView] = useState('home')
+  const [battles, setBattles] = useState([])
   
   console.log('Current View:', currentView) // Debug log
+
+  const handleBattleCreated = (newBattle) => {
+    setBattles(prev => [...prev, newBattle])
+    setCurrentView('enter')
+  }
 
   const renderView = () => {
     console.log('Rendering view:', currentView) // Debug log
@@ -19,13 +25,19 @@ function App() {
       case 'enter':
         return (
           <Enter 
+            battles={battles}
             onBack={() => setCurrentView('home')} 
             onCreateBattle={() => setCurrentView('create')}
             onTransfer={() => setCurrentView('transfer')}
           />
         )
       case 'create':
-        return <CreateBattle onBack={() => setCurrentView('enter')} />
+        return (
+          <CreateBattle 
+            onBack={() => setCurrentView('enter')} 
+            onBattleCreated={handleBattleCreated}
+          />
+        )
       case 'transfer':
         return <Transfer onBack={() => setCurrentView('enter')} />
       default:

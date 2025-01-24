@@ -15,7 +15,7 @@ export default {
         'gradient': 'gradient 3s linear infinite',
         'float': 'float 3s ease-in-out infinite',
         'glow': 'glow 2s ease-in-out infinite',
-        'slide-up': 'slideUp 0.5s ease-out',
+        'slide-up': 'slideUp 0.3s ease-out',
         'spin-slow': 'spin 8s linear infinite',
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'ping': 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
